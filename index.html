@@ -1,30 +1,131 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.3">
-  <style type="text/css">
-    body {background-color: #f2f2f2}
-    p.p2 {margin: 0.0px 0.0px 18.0px 0.0px; font: 15.0px 'Helvetica Neue'; color: #434343; -webkit-text-stroke: #434343}
-    p.p3 {margin: 0.0px 0.0px 8.0px 0.0px; font: 13.0px 'Helvetica Neue'; color: #757575; -webkit-text-stroke: #757575}
-    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 14.0px 'Helvetica Neue'; color: #000000; color: rgba(0, 0, 0, 0.85); -webkit-text-stroke: rgba(0, 0, 0, 0.85); background-color: #ffffff}
-    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 14.0px 'Helvetica Neue'; color: #154a94; -webkit-text-stroke: #154a94; background-color: #e0edfa}
-    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 15.0px 'Helvetica Neue'; color: #000000; color: rgba(0, 0, 0, 0.85); -webkit-text-stroke: rgba(0, 0, 0, 0.85); background-color: #ffffff}
-    span.s1 {font-kerning: none; background-color: #ffffff}
-    span.s2 {font-kerning: none; background-color: #ffffff; -webkit-text-stroke: 0px #000000}
-    span.s3 {font-kerning: none}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud Crisis Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,sans-serif;background:#020617;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
+#wrap{width:100%;max-width:640px;}
+.screen{display:none;}
+.screen.on{display:block;}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#0f172a;border-radius:10px;margin-bottom:16px;}
+.top-bar-title{color:#e2e8f0;font-size:13px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
+.top-bar-stats{display:flex;gap:16px;}
+.stat{text-align:right;}
+.stat-val{font-size:16px;font-weight:700;color:#38bdf8;}
+.stat-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;}
+.alert-box{background:#0f172a;border:1px solid #1e3a5f;border-radius:12px;padding:16px 20px;margin-bottom:14px;}
+.alert-tag{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#f59e0b;margin-bottom:6px;}
+.alert-msg{font-size:15px;color:#e2e8f0;line-height:1.6;}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.opt{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;font-size:13px;color:#cbd5e1;cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;}
+.opt:hover:not(:disabled){background:#263548;border-color:#475569;}
+.opt.correct{background:#052e16;border-color:#16a34a;color:#86efac;}
+.opt.wrong{background:#2d0a0a;border-color:#dc2626;color:#fca5a5;}
+.opt:disabled{cursor:default;}
+.feedback{font-size:13px;min-height:18px;color:#94a3b8;margin-bottom:10px;}
+.feedback.ok{color:#4ade80;}
+.feedback.bad{color:#f87171;}
+.progress-wrap{height:3px;background:#1e293b;border-radius:2px;margin-bottom:14px;overflow:hidden;}
+.progress-fill{height:3px;border-radius:2px;transition:width 0.1s linear,background 0.3s;}
+.lives-row{display:flex;gap:5px;align-items:center;}
+.dot{width:10px;height:10px;border-radius:50%;background:#22c55e;display:inline-block;transition:background 0.3s;}
+.dot.dead{background:#374151;}
+.start-wrap{background:#0f172a;border-radius:14px;padding:2rem;text-align:center;}
+.start-icon{font-size:40px;margin-bottom:12px;}
+.start-title{font-size:20px;font-weight:700;color:#e2e8f0;margin-bottom:8px;}
+.start-desc{font-size:14px;color:#94a3b8;line-height:1.6;margin-bottom:20px;}
+.len-row{display:flex;gap:8px;justify-content:center;margin-bottom:20px;}
+.len-btn{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:8px 18px;font-size:13px;color:#94a3b8;cursor:pointer;}
+.len-btn.sel{border-color:#38bdf8;color:#38bdf8;background:#0c2233;}
+.go-btn{background:#0284c7;border:none;border-radius:10px;padding:12px 40px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;}
+.go-btn:hover{background:#0369a1;}
+.end-wrap{background:#0f172a;border-radius:14px;padding:2rem;text-align:center;}
+.end-title{font-size:22px;font-weight:700;color:#e2e8f0;margin-bottom:6px;}
+.end-sub{font-size:14px;color:#94a3b8;margin-bottom:20px;}
+.end-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;}
+.end-stat{background:#1e293b;border-radius:10px;padding:14px;}
+.end-stat-val{font-size:24px;font-weight:700;color:#38bdf8;}
+.end-stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;}
+.replay-btn{background:#0284c7;border:none;border-radius:10px;padding:12px 40px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;}
+.replay-btn:hover{background:#0369a1;}
+</style>
 </head>
 <body>
-<h1 style="margin: 0.0px 0.0px 4.8px 0.0px; font: 22.0px 'Helvetica Neue'; color: #0e0e0e; -webkit-text-stroke: #0e0e0e"><span class="s1">Cloud Consultant Challenge</span></h1>
-<p class="p2"><span class="s1">You've been hired as a Cloud Consultant. Match each client's situation to the correct cloud term before time runs out. You have 3 lives</span><span class="s2">,</span><span class="s1"> don't let the data center fall!</span></p>
-<p class="p3"><span class="s1">Select game length:</span></p>
-<p class="p4"><span class="s3">30 seconds</span></p>
-<p class="p5"><span class="s3">1 minute</span></p>
-<p class="p4"><span class="s3">3 minutes</span></p>
-<p class="p6"><span class="s3">Start game</span></p>
+<div id="wrap">
+  <div id="start" class="screen on">
+    <div class="start-wrap">
+      <div class="start-icon">🖥️</div>
+      <div class="start-title">Cloud Crisis Manager</div>
+      <div class="start-desc">The IT department is in chaos. Servers are down, clients are panicking, and your boss is calling every 5 minutes. Pick the right cloud solution for each crisis before time runs out.</div>
+      <div class="len-row">
+        <button class="len-btn" data-s="30">30 sec</button>
+        <button class="len-btn sel" data-s="60">1 min</button>
+        <button class="len-btn" data-s="180">3 min</button>
+      </div>
+      <button class="go-btn" id="go-btn">Take the job</button>
+    </div>
+  </div>
+  <div id="game" class="screen">
+    <div class="top-bar">
+      <div class="top-bar-title">Cloud Crisis Manager</div>
+      <div class="top-bar-stats">
+        <div class="stat"><div class="stat-val" id="score">0</div><div class="stat-label">Score</div></div>
+        <div class="stat"><div class="stat-val" id="streak">0</div><div class="stat-label">Streak</div></div>
+        <div class="stat"><div class="stat-val" id="timer">60s</div><div class="stat-label">Time</div></div>
+        <div class="stat"><div class="lives-row" id="lives"></div><div class="stat-label" style="text-align:right;">Lives</div></div>
+      </div>
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" id="pbar" style="width:100%;background:#22c55e;"></div></div>
+    <div class="alert-box">
+      <div class="alert-tag">Incoming crisis</div>
+      <div class="alert-msg" id="crisis-text"></div>
+    </div>
+    <div class="options" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+  </div>
+  <div id="end" class="screen">
+    <div class="end-wrap">
+      <div class="end-title" id="end-title">Crisis resolved!</div>
+      <div class="end-sub" id="end-sub">Here is how you did.</div>
+      <div class="end-stats">
+        <div class="end-stat"><div class="end-stat-val" id="e-score">0</div><div class="end-stat-label">Score</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="e-correct">0</div><div class="end-stat-label">Correct</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="e-streak">0</div><div class="end-stat-label">Best streak</div></div>
+      </div>
+      <button class="replay-btn" id="replay">Try again</button>
+    </div>
+  </div>
+</div>
+<script>
+const QS=[
+  {crisis:"ALERT: The company website just crashed because 50,000 users showed up at once for a product launch. The server cannot handle it.",answer:"Scalability",decoys:["Private Cloud","Virtualization","Serverless Computing"]},
+  {crisis:"URGENT: The sales team needs to access their CRM from home today. Nobody wants to install anything and IT has no time to set up machines.",answer:"SaaS",decoys:["IaaS","PaaS","Hybrid Cloud"]},
+  {crisis:"CRITICAL: The dev team needs raw servers to build a custom environment from scratch. They will manage the OS and everything on top themselves.",answer:"IaaS",decoys:["SaaS","PaaS","Public Cloud"]},
+  {crisis:"WARNING: The company is paying for 10 physical servers but most sit idle. The boss wants to run multiple systems on fewer machines to cut costs.",answer:"Virtualization",decoys:["Containerization","Scalability","IaaS"]},
+  {crisis:"BREACH RISK: Legal says patient data cannot share infrastructure with any other company. We need a completely dedicated cloud environment.",answer:"Private Cloud",decoys:["Public Cloud","Hybrid Cloud","SaaS"]},
+  {crisis:"DEADLINE: Developers are wasting days configuring servers before they can write a single line of code. They just need to build and deploy, nothing else.",answer:"PaaS",decoys:["IaaS","SaaS","Serverless Computing"]},
+  {crisis:"OUTAGE: The company is still running everything on local hardware. The CEO wants to move all computing and storage to the internet and pay only for what is used.",answer:"Cloud Computing",decoys:["Managed Hosting","IaaS","Virtualization"]},
+  {crisis:"BUDGET ALERT: A startup needs cloud services but cannot afford its own dedicated infrastructure. They are okay sharing a network with other businesses.",answer:"Public Cloud",decoys:["Private Cloud","Community Cloud","Hybrid Cloud"]},
+  {crisis:"LAG COMPLAINT: International users are experiencing slow load times. We need to serve content from servers closest to each user around the world.",answer:"Content Delivery Network",decoys:["Scalability","Public Cloud","Cloud Computing"]},
+  {crisis:"COMPLIANCE ISSUE: Half our data must stay on our own servers by law, but we also need cloud flexibility for everything else.",answer:"Hybrid Cloud",decoys:["Multi-Cloud","Private Cloud","Public Cloud"]},
+  {crisis:"DEPLOY FAILURE: Each microservice breaks in production because the environment is different from development. We need each service to carry its own runtime.",answer:"Containerization",decoys:["Virtualization","PaaS","IaaS"]},
+  {crisis:"COST OVERRUN: We are paying for servers running 24/7 but our functions only trigger a few times per hour. We need to pay only when the code actually runs.",answer:"Serverless Computing",decoys:["PaaS","IaaS","Cloud Computing"]},
+];
+let sec=60,score=0,streak=0,best=0,lives=3,left=0,tick=null,total=0,correct=0,pool=[],done=false,cur=null;
+function shuffle(a){return[...a].sort(()=>Math.random()-0.5);}
+function show(id){['start','game','end'].forEach(s=>document.getElementById(s).classList.remove('on'));document.getElementById(id).classList.add('on');}
+function renderLives(){const el=document.getElementById('lives');el.innerHTML='';for(let i=0;i<3;i++){const d=document.createElement('span');d.className='dot'+(i>=lives?' dead':'');el.appendChild(d);}}
+function startGame(){score=0;streak=0;best=0;lives=3;left=sec;total=0;correct=0;done=false;pool=shuffle(QS);show('game');renderLives();nextQ();runTick();}
+function nextQ(){if(!pool.length)pool=shuffle(QS);cur=pool.pop();done=false;document.getElementById('fb').textContent='';document.getElementById('fb').className='feedback';document.getElementById('crisis-text').textContent=cur.crisis;const opts=shuffle([cur.answer,...cur.decoys.slice(0,3)]);const el=document.getElementById('opts');el.innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.className='opt';b.textContent=o;b.onclick=()=>pick(b,o);el.appendChild(b);});document.getElementById('score').textContent=score;document.getElementById('streak').textContent=streak;}
+function pick(btn,chosen){if(done)return;done=true;total++;const ok=chosen===cur.answer;document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===cur.answer)b.classList.add('correct');});const fb=document.getElementById('fb');if(ok){correct++;streak++;if(streak>best)best=streak;const pts=10+(streak>1?(streak-1)*2:0);score+=pts;btn.classList.add('correct');fb.textContent=streak>1?'Nice! '+streak+'x streak. +'+pts+' points':'Correct! +10 points';fb.className='feedback ok';}else{streak=0;lives--;btn.classList.add('wrong');fb.textContent='Wrong. The answer was: '+cur.answer;fb.className='feedback bad';renderLives();if(lives<=0){endGame('lives');return;}}document.getElementById('score').textContent=score;document.getElementById('streak').textContent=streak;setTimeout(nextQ,1300);}
+function runTick(){if(tick)clearInterval(tick);const tot=sec;tick=setInterval(()=>{left--;document.getElementById('timer').textContent=left+'s';const pct=left/tot*100;const bar=document.getElementById('pbar');bar.style.width=pct+'%';bar.style.background=pct>40?'#22c55e':pct>20?'#f59e0b':'#ef4444';if(left<=0){clearInterval(tick);endGame('time');}},1000);}
+function endGame(reason){clearInterval(tick);show('end');document.getElementById('end-title').textContent=reason==='lives'?'Data center down!':'Time is up!';document.getElementById('end-sub').textContent=reason==='lives'?'You ran out of lives. Better luck next time.':'Time ran out. See how you did.';document.getElementById('e-score').textContent=score;document.getElementById('e-correct').textContent=correct+'/'+total;document.getElementById('e-streak').textContent=best;}
+document.querySelectorAll('.len-btn').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.len-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sec=parseInt(b.dataset.s);});});
+document.getElementById('go-btn').addEventListener('click',startGame);
+document.getElementById('replay').addEventListener('click',()=>show('start'));
+</script>
 </body>
 </html>
