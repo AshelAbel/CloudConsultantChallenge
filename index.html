@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud Consultant Challenge</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #111; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  #app { background: #fff; border-radius: 16px; padding: 2rem; max-width: 640px; width: 100%; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 0.4rem; }
+  .sub { font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 1.5rem; }
+  .hud { display: flex; gap: 10px; margin-bottom: 1.25rem; }
+  .hud-card { background: #f5f5f5; border-radius: 10px; padding: 0.5rem 1rem; text-align: center; flex: 1; }
+  .hud-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+  .hud-val { font-size: 20px; font-weight: 600; }
+  .timer-bar-wrap { height: 5px; background: #eee; border-radius: 3px; margin-bottom: 1.25rem; overflow: hidden; }
+  .timer-bar { height: 5px; border-radius: 3px; background: #1D9E75; transition: width 0.1s linear, background 0.3s; }
+  .scenario-card { background: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+  .scenario-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .scenario-text { font-size: 15px; line-height: 1.6; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .choice-btn { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 0.75rem 1rem; font-size: 14px; cursor: pointer; text-align: left; transition: background 0.15s; }
+  .choice-btn:hover:not(:disabled) { background: #f5f5f5; }
+  .choice-btn.correct { background: #eafaf4; border-color: #1D9E75; color: #0F6E56; font-weight: 500; }
+  .choice-btn.wrong { background: #fef2f2; border-color: #E24B4A; color: #A32D2D; }
+  .choice-btn:disabled { cursor: default; }
+  .feedback { font-size: 13px; min-height: 20px; margin-bottom: 0.75rem; color: #888; }
+  .feedback.correct { color: #0F6E56; }
+  .feedback.wrong { color: #A32D2D; }
+  .lives { display: flex; gap: 6px; align-items: center; }
+  .length-btns { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .len-btn { border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 0.5rem 1.25rem; font-size: 14px; cursor: pointer; }
+  .len-btn.selected { border-color: #378ADD; background: #E6F1FB; color: #185FA5; font-weight: 500; }
+  .big-btn { display: block; width: 100%; padding: 0.85rem; border-radius: 10px; border: 1px solid #ddd; background: #fff; font-size: 15px; font-weight: 500; cursor: pointer; text-align: center; }
+  .big-btn:hover { background: #f5f5f5; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { background: #f5f5f5; border-radius: 10px; padding: 0.75rem 1rem; text-align: center; }
+  .stat-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .stat-val { font-size: 22px; font-weight: 600; }
+  .progress-bar { height: 5px; background: #eee; border-radius: 3px; margin-bottom: 0.5rem; overflow: hidden; }
+  .progress-fill { height: 5px; border-radius: 3px; background: #1D9E75; }
+  .progress-label { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+  #start-screen, #game-screen, #end-screen { display: none; }
+  #start-screen.active, #game-screen.active, #end-screen.active { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="start-screen" class="active">
+    <h1>Cloud Consultant Challenge</h1>
+    <p class="sub">You've been hired as a Cloud Consultant. Match each client's situation to the correct cloud term before time runs out. You have 3 lives — don't let the data center fall!</p>
+    <p style="font-size:13px;color:#888;margin-bottom:8px;">Select game length:</p>
+    <div class="length-btns">
+      <button class="len-btn" data-sec="30">30 seconds</button>
+      <button class="len-btn selected" data-sec="60">1 minute</button>
+      <button class="len-btn" data-sec="180">3 minutes</button>
+    </div>
+    <button class="big-btn" id="start-btn">Start game</button>
+  </div>
+  <div id="game-screen">
+    <div class="hud">
+      <div class="hud-card"><div class="hud-label">Score</div><div class="hud-val" id="score-display">0</div></div>
+      <div class="hud-card"><div class="hud-label">Streak</div><div class="hud-val" id="streak-display">0</div></div>
+      <div class="hud-card"><div class="hud-label">Time</div><div class="hud-val" id="time-display">60s</div></div>
+      <div class="hud-card"><div class="hud-label">Lives</div><div class="lives" id="lives-display"></div></div>
+    </div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+    <div class="scenario-card">
+      <div class="scenario-label">Client scenario</div>
+      <div class="scenario-text" id="scenario-text"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+  <div id="end-screen">
+    <h1 id="end-title">Game over</h1>
+    <p class="sub" id="end-msg"></p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Score</div><div class="stat-val" id="final-score">0</div></div>
+      <div class="stat-card"><div class="stat-label">Correct</div><div class="stat-val" id="final-correct">0</div></div>
+      <div class="stat-card"><div class="stat-label">Best streak</div><div class="stat-val" id="final-streak">0</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="accuracy-bar" style="width:0%"></div></div>
+    <p class="progress-label" id="accuracy-label"></p>
+    <button class="big-btn" id="replay-btn">Play again</button>
+  </div>
+</div>
+<script>
+const ALL_QS=[{scenario:"Black Friday hit us hard last year — servers went down, we lost thousands. This year, our infrastructure automatically kept up with the traffic spike. No crashes, no calls to IT.",answer:"Scalability",decoys:["Virtualization","Load Balancing","Auto Failover"]},{scenario:"We onboarded 40 remote employees last month. Every single one was up and running with our project management and payroll tools same day — IT didn't touch a single machine.",answer:"SaaS",decoys:["PaaS","IaaS","Private Cloud"]},{scenario:"We're a small team but we have very specific software needs. We lease the hardware remotely and handle everything else ourselves — OS, middleware, apps, all of it.",answer:"IaaS",decoys:["SaaS","PaaS","Colocation"]},{scenario:"We cut our hardware budget in half by making each physical machine do the job of several. Each one runs multiple isolated environments simultaneously.",answer:"Virtualization",decoys:["Containerization","IaaS","Scalability"]},{scenario:"We're in healthcare. Regulations are strict. Our entire cloud environment is dedicated exclusively to us — no shared resources with outside organizations.",answer:"Private Cloud",decoys:["Hybrid Cloud","SaaS","Public Cloud"]},{scenario:"Our engineers were spending 30% of their time just setting up environments. Now they just write code and push — the infrastructure is already handled for them.",answer:"PaaS",decoys:["IaaS","DevOps","SaaS"]},{scenario:"We shut down our data center two years ago. Now everything — storage, processing, software — runs over the internet. We pay for what we use, like a utility bill.",answer:"Cloud Computing",decoys:["SaaS","Managed Hosting","IaaS"]},{scenario:"We're a small business. We can't afford dedicated infrastructure, so we run on the same provider network as thousands of other companies worldwide.",answer:"Public Cloud",decoys:["Community Cloud","Hybrid Cloud","Private Cloud"]},{scenario:"Our app serves users across five continents. Requests are routed to whichever data center is physically closest to the user to reduce lag.",answer:"Content Delivery Network",decoys:["Scalability","Cloud Computing","Public Cloud"]},{scenario:"Half our workload runs in our on-premise data center, half in a third-party cloud. The two environments share data and applications seamlessly.",answer:"Hybrid Cloud",decoys:["Multi-Cloud","Private Cloud","Public Cloud"]},{scenario:"We package each microservice with everything it needs to run — its own libraries, config, and runtime — so it behaves the same in dev as in production.",answer:"Containerization",decoys:["Virtualization","PaaS","IaaS"]},{scenario:"We don't manage servers at all. We just write functions and upload them. The cloud runs them only when triggered and we're billed per execution, not per hour.",answer:"Serverless Computing",decoys:["PaaS","IaaS","Cloud Computing"]}];
+let chosenSec=60,score=0,streak=0,bestStreak=0,lives=3,timeLeft=60,timer=null,total=0,correct=0,pool=[],answered=false,currentQ=null;
+function shuffle(arr){return[...arr].sort(()=>Math.random()-0.5);}
+function startGame(){score=0;streak=0;bestStreak=0;lives=3;timeLeft=chosenSec;total=0;correct=0;answered=false;pool=shuffle(ALL_QS);show('game-screen');renderLives();nextQ();runTimer();}
+function renderLives(){const el=document.getElementById('lives-display');el.innerHTML='';for(let i=0;i<3;i++){const s=document.createElement('span');s.style.fontSize='16px';s.textContent=i<lives?'🟢':'🔴';el.appendChild(s);}}
+function nextQ(){if(!pool.length)pool=shuffle(ALL_QS);currentQ=pool.pop();answered=false;document.getElementById('feedback').textContent='';document.getElementById('feedback').className='feedback';document.getElementById('scenario-text').textContent=currentQ.scenario;const opts=shuffle([currentQ.answer,...currentQ.decoys.slice(0,3)]);const choicesEl=document.getElementById('choices');choicesEl.innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.className='choice-btn';b.textContent=o;b.onclick=()=>pick(b,o);choicesEl.appendChild(b);});updateHUD();}
+function pick(btn,chosen){if(answered)return;answered=true;total++;const isCorrect=chosen===currentQ.answer;document.querySelectorAll('.choice-btn').forEach(b=>{b.disabled=true;if(b.textContent===currentQ.answer)b.classList.add('correct');});const fb=document.getElementById('feedback');if(isCorrect){correct++;streak++;if(streak>bestStreak)bestStreak=streak;score+=10+(streak>1?(streak-1)*2:0);btn.classList.add('correct');fb.textContent=streak>1?`Correct! ${streak}x streak — +${10+(streak-1)*2} pts`:'Correct! +10 pts';fb.className='feedback correct';}else{streak=0;lives--;btn.classList.add('wrong');fb.textContent=`Not quite — the answer is ${currentQ.answer}`;fb.className='feedback wrong';renderLives();if(lives<=0){endGame('out of lives');return;}}updateHUD();setTimeout(nextQ,1200);}
+function runTimer(){if(timer)clearInterval(timer);const tot=chosenSec;timer=setInterval(()=>{timeLeft--;document.getElementById('time-display').textContent=timeLeft+'s';const pct=timeLeft/tot*100;const bar=document.getElementById('timer-bar');bar.style.width=pct+'%';bar.style.background=pct>40?'#1D9E75':pct>20?'#EF9F27':'#E24B4A';if(timeLeft<=0){clearInterval(timer);endGame('time up');}},1000);}
+function updateHUD(){document.getElementById('score-display').textContent=score;document.getElementById('streak-display').textContent=streak;}
+function endGame(reason){clearInterval(timer);show('end-screen');document.getElementById('end-title').textContent=reason==='out of lives'?'Data center down!':"Time's up!";document.getElementById('end-msg').textContent=reason==='out of lives'?'You ran out of lives. Try again!':'Time ran out. See how you did!';document.getElementById('final-score').textContent=score;document.getElementById('final-correct').textContent=correct;document.getElementById('final-streak').textContent=bestStreak;const acc=total>0?Math.round(correct/total*100):0;document.getElementById('accuracy-bar').style.width=acc+'%';document.getElementById('accuracy-label').textContent=`${acc}% accuracy (${correct}/${total} correct)`;}
+function show(id){['start-screen','game-screen','end-screen'].forEach(s=>document.getElementById(s).classList.remove('active'));document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.len-btn').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.len-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');chosenSec=parseInt(b.dataset.sec);});});
+document.getElementById('start-btn').addEventListener('click',startGame);
+document.getElementById('replay-btn').addEventListener('click',()=>show('start-screen'));
+</script>
+</body>
+</html>
